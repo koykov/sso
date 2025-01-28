@@ -24,8 +24,7 @@ func (s *String) Assign(str string) *String {
 		return s
 	case l <= payload:
 		copy(s.buf[:l], str)
-		s.lf_.setl(uint8(l))
-		s.lf_.setf(1)
+		s.lf_.encode(uint8(l), 1)
 	case l == maxLen:
 		panic("SSO: string length must be less than MaxInt64")
 	default:
@@ -43,10 +42,10 @@ func (s *String) Concat(str string) *String {
 }
 
 func (s *String) String() string {
-	if s.lf_.getf() == 1 {
+	if l, flag := s.lf_.decode(); flag == 1 {
 		var h sheader
 		h.data = uintptr(unsafe.Pointer(&s.buf))
-		h.len = int(s.lf_.getl())
+		h.len = int(l)
 		return *(*string)(unsafe.Pointer(&h))
 	}
 	return *(*string)(unsafe.Pointer(s))
