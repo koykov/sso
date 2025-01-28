@@ -32,7 +32,7 @@ func (s *String) Assign(str string) *String {
 		buf := make([]byte, l)
 		copy(buf, str)
 		bh := (*bheader)(unsafe.Pointer(&buf))
-		sh := (*sheader)(unsafe.Pointer(&s))
+		sh := (*sheader)(unsafe.Pointer(s))
 		sh.data, sh.len = bh.data, bh.len
 	}
 	return s
