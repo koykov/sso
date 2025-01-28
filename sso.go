@@ -1,13 +1,11 @@
 package sso
 
-import (
-	"math"
-	"unsafe"
-)
+import "unsafe"
 
 const (
-	payload = 15
-	maxLen  = math.MaxInt64
+	intSz   = 32 << (^uint(0) >> 63)
+	maxLen  = 1<<(intSz-1) - 1
+	payload = intSz/4 - 1
 )
 
 type String struct {
