@@ -10,7 +10,7 @@ const (
 
 type String struct {
 	buf [payload]byte
-	lf_ lf
+	hdr header
 }
 
 func New(data string) (s String) {
@@ -24,26 +24,28 @@ func (s *String) Assign(str string) *String {
 		return s
 	case l <= payload:
 		copy(s.buf[:l], str)
-		s.lf_.encode(uint8(l), 1)
+		s.hdr.encode(uint8(l), 1)
 	case l == maxLen:
 		panic("SSO: string length must be less than MaxInt64")
 	default:
 		buf := make([]byte, l)
 		copy(buf, str)
-		bh := (*bheader)(unsafe.Pointer(&buf))
-		sh := (*sheader)(unsafe.Pointer(s))
+		bh := (*sliceh)(unsafe.Pointer(&buf))
+		sh := (*stringh)(unsafe.Pointer(s))
 		sh.data, sh.len = bh.data, bh.len
 	}
 	return s
 }
 
-func (s *String) Concat(str string) *String {
+func (s *String) Append(str string) *String {
+	_ = str
+	// todo implement me
 	return s
 }
 
 func (s *String) String() string {
-	if l, flag := s.lf_.decode(); flag == 1 {
-		var h sheader
+	if l, flag := s.hdr.decode(); flag == 1 {
+		var h stringh
 		h.data = uintptr(unsafe.Pointer(&s.buf))
 		h.len = int(l)
 		return *(*string)(unsafe.Pointer(&h))
