@@ -38,8 +38,38 @@ func (s *String) Assign(str string) *String {
 }
 
 func (s *String) Append(str string) *String {
-	_ = str
-	// todo implement me
+	n := len(str)
+	l, f := s.hdr.decode()
+	if f == 1 {
+		// SSO enabled
+		if n+int(l) <= payload {
+			// SSO possible
+			copy(s.buf[l:], str)
+			s.hdr.encode(l+uint8(n), 1)
+			return s
+		}
+		// SSO impossible
+		buf := make([]byte, n+int(l))
+		copy(buf, s.buf[:l])
+		copy(buf[l:], str)
+		bh := (*sliceh)(unsafe.Pointer(&buf))
+		sh := (*stringh)(unsafe.Pointer(s))
+		sh.data, sh.len = bh.data, bh.len
+		return s
+	}
+	// Regular concat
+	bs := *(*string)(unsafe.Pointer(s))
+	buf := make([]byte, n+len(bs))
+	copy(buf, bs)
+	copy(buf[len(bs):], str)
+	bh := (*sliceh)(unsafe.Pointer(&buf))
+	sh := (*stringh)(unsafe.Pointer(s))
+	sh.data, sh.len = bh.data, bh.len
+	return s
+}
+
+func (s *String) Reset() *String {
+	s.hdr.encode(0, 1)
 	return s
 }
 
