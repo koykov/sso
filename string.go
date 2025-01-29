@@ -60,6 +60,9 @@ func appendByteseq[T byteseq](dst *String, s T) *String {
 		return dst
 	}
 	l, f := dst.hdr.decode()
+	if n+int(l) >= maxLen {
+		panic("SSO: string length must be less than MaxInt64")
+	}
 	if f == 1 {
 		// SSO enabled
 		if n+int(l) <= payload {
