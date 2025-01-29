@@ -3,7 +3,7 @@ package sso
 type header uint8
 
 func (h *header) encode(len, flag uint8) {
-	*h = *h | header(len&0b01111111)
+	*h = header(len & 0b01111111)
 	*h = *h | header(flag<<7)
 }
 
