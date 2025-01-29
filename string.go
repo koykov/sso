@@ -27,6 +27,29 @@ func (s *String) AssignString(str string) *String {
 	return assignByteseq(s, str)
 }
 
+func (s *String) Append(str []byte) *String {
+	return appendByteseq(s, str)
+}
+
+func (s *String) AppendString(str string) *String {
+	return appendByteseq(s, str)
+}
+
+func (s *String) Reset() *String {
+	s.hdr.encode(0, 1)
+	return s
+}
+
+func (s *String) String() string {
+	if l, flag := s.hdr.decode(); flag == 1 {
+		var h stringh
+		h.data = uintptr(unsafe.Pointer(&s.buf))
+		h.len = int(l)
+		return *(*string)(unsafe.Pointer(&h))
+	}
+	return *(*string)(unsafe.Pointer(s))
+}
+
 func assignByteseq[T byteseq](dst *String, str T) *String {
 	switch l := len(str); {
 	case l == 0:
@@ -44,14 +67,6 @@ func assignByteseq[T byteseq](dst *String, str T) *String {
 		sh.data, sh.len = bh.data, bh.len
 	}
 	return dst
-}
-
-func (s *String) Append(str []byte) *String {
-	return appendByteseq(s, str)
-}
-
-func (s *String) AppendString(str string) *String {
-	return appendByteseq(s, str)
 }
 
 func appendByteseq[T byteseq](dst *String, s T) *String {
@@ -89,19 +104,4 @@ func appendByteseq[T byteseq](dst *String, s T) *String {
 	sh := (*stringh)(unsafe.Pointer(dst))
 	sh.data, sh.len = bh.data, bh.len
 	return dst
-}
-
-func (s *String) Reset() *String {
-	s.hdr.encode(0, 1)
-	return s
-}
-
-func (s *String) String() string {
-	if l, flag := s.hdr.decode(); flag == 1 {
-		var h stringh
-		h.data = uintptr(unsafe.Pointer(&s.buf))
-		h.len = int(l)
-		return *(*string)(unsafe.Pointer(&h))
-	}
-	return *(*string)(unsafe.Pointer(s))
 }
