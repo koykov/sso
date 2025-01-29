@@ -14,7 +14,8 @@ type String struct {
 }
 
 func New[T byteseq](data T) (s String) {
-	s = assignByteseq(&s, data)
+	p := &s
+	p = assignByteseq(p, data)
 	return
 }
 
