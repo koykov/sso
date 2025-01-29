@@ -13,6 +13,10 @@ type String struct {
 	hdr header
 }
 
+type byteseq interface {
+	~string | ~[]byte
+}
+
 func New[T byteseq](data T) (s String) {
 	p := &s
 	p = assignByteseq(p, data)

@@ -1,9 +1,5 @@
 package sso
 
-type byteseq interface {
-	~string | ~[]byte
-}
-
 type sliceh struct {
 	data     uintptr
 	len, cap int
