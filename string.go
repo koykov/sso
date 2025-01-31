@@ -41,6 +41,14 @@ func (s *String) Reset() *String {
 	return s
 }
 
+func (s *String) Bytes() []byte {
+	ss := s.String()
+	sh := (*stringh)(unsafe.Pointer(&ss))
+	var bh sliceh
+	bh.data, bh.len, bh.cap = sh.data, sh.len, sh.len
+	return *(*[]byte)(unsafe.Pointer(&bh))
+}
+
 func (s *String) String() string {
 	sh := s.header()
 	if l, flag := sh.hdr.decode(); flag == 1 {
