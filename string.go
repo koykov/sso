@@ -8,10 +8,7 @@ const (
 	payload = intSz/4 - 1
 )
 
-type String struct {
-	buf [payload]byte
-	hdr header
-}
+type String string
 
 type byteseq interface {
 	~string | ~[]byte
@@ -40,18 +37,23 @@ func (s *String) AppendString(str string) *String {
 }
 
 func (s *String) Reset() *String {
-	s.hdr.encode(0, 1)
+	s.header().hdr.encode(0, 1)
 	return s
 }
 
 func (s *String) String() string {
-	if l, flag := s.hdr.decode(); flag == 1 {
+	sh := s.header()
+	if l, flag := sh.hdr.decode(); flag == 1 {
 		var h stringh
-		h.data = uintptr(unsafe.Pointer(&s.buf))
+		h.data = uintptr(unsafe.Pointer(&sh.buf))
 		h.len = int(l)
 		return *(*string)(unsafe.Pointer(&h))
 	}
 	return *(*string)(unsafe.Pointer(s))
+}
+
+func (s *String) header() *ssoheader {
+	return (*ssoheader)(unsafe.Pointer(s))
 }
 
 func assignByteseq[T byteseq](dst *String, str T) *String {
@@ -59,8 +61,9 @@ func assignByteseq[T byteseq](dst *String, str T) *String {
 	case l == 0:
 		return dst
 	case l <= payload:
-		copy(dst.buf[:l], str)
-		dst.hdr.encode(uint8(l), 1)
+		h := dst.header()
+		copy(h.buf[:l], str)
+		h.hdr.encode(uint8(l), 1)
 	case l == maxLen:
 		panic("SSO: string length must be less than MaxInt64")
 	default:
@@ -78,7 +81,8 @@ func appendByteseq[T byteseq](dst *String, s T) *String {
 	if n == 0 {
 		return dst
 	}
-	l, f := dst.hdr.decode()
+	h := dst.header()
+	l, f := h.hdr.decode()
 	if n+int(l) >= maxLen {
 		panic("SSO: string length must be less than MaxInt64")
 	}
@@ -86,13 +90,13 @@ func appendByteseq[T byteseq](dst *String, s T) *String {
 		// SSO enabled
 		if n+int(l) <= payload {
 			// SSO possible
-			copy(dst.buf[l:], s)
-			dst.hdr.encode(l+uint8(n), 1)
+			copy(h.buf[l:], s)
+			h.hdr.encode(l+uint8(n), 1)
 			return dst
 		}
 		// SSO impossible
 		buf := make([]byte, n+int(l))
-		copy(buf, dst.buf[:l])
+		copy(buf, h.buf[:l])
 		copy(buf[l:], s)
 		bh := (*sliceh)(unsafe.Pointer(&buf))
 		sh := (*stringh)(unsafe.Pointer(dst))
