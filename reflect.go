@@ -9,3 +9,8 @@ type stringh struct {
 	data uintptr
 	len  int
 }
+
+type ssoheader struct {
+	buf [payload]byte
+	hdr header
+}
