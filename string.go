@@ -49,7 +49,7 @@ func (s *String) String() string {
 		h.len = int(l)
 		return *(*string)(unsafe.Pointer(&h))
 	}
-	return *(*string)(unsafe.Pointer(s))
+	return *(*string)(s)
 }
 
 func (s *String) header() *ssoheader {
