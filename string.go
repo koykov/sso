@@ -16,24 +16,24 @@ type byteseq interface {
 
 func New[T byteseq](data T) (s String) {
 	p := &s
-	p = assignByteseq(p, data)
+	p = cpy(p, data)
 	return
 }
 
-func (s *String) Assign(str []byte) *String {
-	return assignByteseq(s, str)
+func (s *String) CopyBytes(str []byte) *String {
+	return cpy(s, str)
 }
 
-func (s *String) AssignString(str string) *String {
-	return assignByteseq(s, str)
+func (s *String) Copy(str string) *String {
+	return cpy(s, str)
 }
 
-func (s *String) Append(str []byte) *String {
-	return appendByteseq(s, str)
+func (s *String) ConcatBytes(str []byte) *String {
+	return concat(s, str)
 }
 
-func (s *String) AppendString(str string) *String {
-	return appendByteseq(s, str)
+func (s *String) Concat(str string) *String {
+	return concat(s, str)
 }
 
 func (s *String) Reset() *String {
@@ -64,17 +64,19 @@ func (s *String) header() *ssoheader {
 	return (*ssoheader)(unsafe.Pointer(s))
 }
 
-func assignByteseq[T byteseq](dst *String, str T) *String {
+func cpy[T byteseq](dst *String, str T) *String {
 	switch l := len(str); {
 	case l == 0:
 		return dst
 	case l <= payload:
+		// SSO possible
 		h := dst.header()
 		copy(h.buf[:l], str)
 		h.hdr.encode(uint8(l), 1)
 	case l == maxLen:
 		panic("SSO: string length must be less than MaxInt64")
 	default:
+		// SSO impossible
 		buf := make([]byte, l)
 		copy(buf, str)
 		bh := (*sliceh)(unsafe.Pointer(&buf))
@@ -84,7 +86,7 @@ func assignByteseq[T byteseq](dst *String, str T) *String {
 	return dst
 }
 
-func appendByteseq[T byteseq](dst *String, s T) *String {
+func concat[T byteseq](dst *String, s T) *String {
 	n := len(s)
 	if n == 0 {
 		return dst
@@ -112,7 +114,7 @@ func appendByteseq[T byteseq](dst *String, s T) *String {
 		return dst
 	}
 	// Regular concat
-	bs := *(*string)(unsafe.Pointer(dst))
+	bs := *(*string)(dst)
 	buf := make([]byte, n+len(bs))
 	copy(buf, bs)
 	copy(buf[len(bs):], s)
