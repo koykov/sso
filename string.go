@@ -8,39 +8,47 @@ const (
 	payload = intSz/4 - 1
 )
 
+// String represents native string with SSO optimization.
 type String string
 
 type byteseq interface {
 	~string | ~[]byte
 }
 
+// New makes new SSO string and copies data inside.
 func New[T byteseq](data T) (s String) {
 	p := &s
 	p = cpy(p, data)
 	return
 }
 
+// CopyBytes emulates operator "=" for SSO string.
 func (s *String) CopyBytes(str []byte) *String {
 	return cpy(s, str)
 }
 
+// Copy emulates operator "=" for SSO string.
 func (s *String) Copy(str string) *String {
 	return cpy(s, str)
 }
 
+// ConcatBytes emulates operator "+" for SSO string.
 func (s *String) ConcatBytes(str []byte) *String {
 	return concat(s, str)
 }
 
+// Concat emulates operator "+" for SSO string.
 func (s *String) Concat(str string) *String {
 	return concat(s, str)
 }
 
+// Reset reduces length of SSO string to zero.
 func (s *String) Reset() *String {
 	s.header().hdr.encode(0, 1)
 	return s
 }
 
+// Bytes returns SSO string contents as bytes.
 func (s *String) Bytes() []byte {
 	ss := s.String()
 	sh := (*stringh)(unsafe.Pointer(&ss))
@@ -49,6 +57,7 @@ func (s *String) Bytes() []byte {
 	return *(*[]byte)(unsafe.Pointer(&bh))
 }
 
+// String returns SSO string contents as string.
 func (s *String) String() string {
 	sh := s.header()
 	if l, flag := sh.hdr.decode(); flag == 1 {
